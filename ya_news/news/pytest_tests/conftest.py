@@ -5,7 +5,6 @@ from django.conf import settings
 from django.test.client import Client
 from django.urls import reverse
 from django.utils import timezone
-
 from news.models import Comment, News
 
 
@@ -59,29 +58,17 @@ def comment(news, author):
 
 
 @pytest.fixture
-def return_news_id(news):
-    """Фикстура возвращающая id новости."""
-    return (news.id,)
-
-
-@pytest.fixture
-def return_comment_id(comment):
-    """Фикстура возврощающая id комментария."""
-    return (comment.id,)
-
-
-@pytest.fixture
 def created_news():
     """Фикстура для создания новостей на 1 больше чем показывает пагинатор."""
     today = timezone.now()
-    all_news = []
-    for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1):
-        news = News(
+    all_news = [
+        News(
             title=f'Новость {index}',
             text='Просто текст.',
             date=today - timedelta(days=index)
         )
-        all_news.append(news)
+        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
+    ]
     News.objects.bulk_create(all_news)
     return all_news
 
@@ -104,23 +91,15 @@ def created_comments(news, author):
 
 
 @pytest.fixture
-def form_data():
-    """Фикстура для проверки изменения комментария."""
-    return {
-        'text': 'Другой текст комментария'
-    }
-
-
-@pytest.fixture
 def redirect_news_home():
     """Фикстура редиректа на домашнюю странницу."""
     return reverse('news:home')
 
 
 @pytest.fixture
-def redirect_news_detail(return_news_id):
-    """Фикстару редиректа отдельного поста новости."""
-    return reverse('news:detail', args=return_news_id)
+def redirect_news_detail(news):
+    """Фикстура редиректа отдельного поста новости."""
+    return reverse('news:detail', args=(news.id,))
 
 
 @pytest.fixture
@@ -130,15 +109,15 @@ def redirect_to_comments(redirect_news_detail):
 
 
 @pytest.fixture
-def redirect_comment_delete(return_comment_id):
-    """Фикстура редиректа удаления комментарий."""
-    return reverse('news:delete', args=return_comment_id)
+def redirect_comment_delete(comment):
+    """Фикстура редиректа удаления комментария."""
+    return reverse('news:delete', args=(comment.id,))
 
 
 @pytest.fixture
-def redirect_comment_edit(return_comment_id):
+def redirect_comment_edit(comment):
     """Фикстура редиректа редактирования комментария."""
-    return reverse('news:edit', args=return_comment_id)
+    return reverse('news:edit', args=(comment.id,))
 
 
 @pytest.fixture
