@@ -63,10 +63,12 @@ def test_user_cant_delete_comment_of_another_user(
 ):
     """Тест пользователь не может удалить чужой комментарий."""
     response = not_author_client.post(redirect_comment_delete)
-    orig_comment = Comment.objects.get(id=comment.id)
+    updated_comment = Comment.objects.get(id=comment.id)
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert Comment.objects.count() == 1
-    assert comment.text == orig_comment.text
+    assert updated_comment.text == comment.text
+    assert updated_comment.author_id == comment.author_id
+    assert updated_comment.news_id == comment.news_id
 
 
 def test_author_can_edit_comment(
@@ -76,14 +78,12 @@ def test_author_can_edit_comment(
         comment
 ):
     """Тест автор может редактировать свой комментарий."""
-    old_auhtor = comment.author
-    old_news = comment.news
     response = author_client.post(redirect_comment_edit, data=FORM_DATA)
     assertRedirects(response, redirect_to_comments)
-    comment.refresh_from_db()
-    assert comment.text == FORM_DATA['text']
-    assert comment.author == old_auhtor
-    assert comment.news == old_news
+    updated_comment = Comment.objects.get(pk=comment.pk)
+    assert updated_comment.text == FORM_DATA['text']
+    assert updated_comment.author == comment.author
+    assert updated_comment.news == comment.news
 
 
 def test_user_cant_edit_comment_of_another_user(
@@ -92,12 +92,9 @@ def test_user_cant_edit_comment_of_another_user(
         comment,
 ):
     """Тест пользователь не может редактировать чужой комментарий."""
-    old_comment = comment.text
-    old_author = comment.author
-    old_news = comment.news
     response = not_author_client.post(redirect_comment_edit, data=FORM_DATA)
     assert response.status_code == HTTPStatus.NOT_FOUND
-    comment.refresh_from_db()
-    assert comment.text == old_comment
-    assert comment.author == old_author
-    assert comment.news == old_news
+    updated_comment = Comment.objects.get(pk=comment.pk)
+    assert updated_comment.text == comment.text
+    assert updated_comment.author_id == comment.author_id
+    assert updated_comment.news_id == comment.news_id
