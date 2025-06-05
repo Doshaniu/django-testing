@@ -16,7 +16,6 @@ LOGOUT_URL = 'users:logout'
 SIGN_UP_URL = 'users:signup'
 
 
-
 @pytest.mark.parametrize(
     'name',
     (
